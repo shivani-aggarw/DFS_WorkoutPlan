@@ -5,7 +5,7 @@ import random
 
 # At each intersection, should we try to go as straight as possible?
 # Set to False for task 1, then switch to True for task 2.
-STRAIGHTER_PATH = False
+STRAIGHTER_PATH = True
 
 # =================================
 # Workout planning with length, bearing, and elevation
@@ -15,19 +15,38 @@ STRAIGHTER_PATH = False
 # 3) above plus: report total elevation gain
 
 # Helper function that determines if edge (v,w) is a valid candidate for adding to the graph
-def good(gst, d, v, w, graph, goal_dist):
-    return (v not in gst.adj[w]
-            and graph.edges[v, w, 0]['length'] > 0
-            and d + graph.edges[v, w, 0]['length'] < goal_dist)
+# gst = graph search tree or path we're building, keeps track of visited vertices and edges - probably a stack
+# d = distance travelled along the path so far
+# v = starting vertex, w = adjacent vertex
+# graph = full graph object, a NetworkX object - each edge has 'length' and 'elevation'
+# goal_dist = target distance of the workout routine
+
+# def good(gst, d, v, w, graph, goal_dist): # faulty code 
+#     return (v not in gst.adj[w] # EDITED: checking if edge(v,w) has already been covered in the path
+#             and graph.edges[v, w, 0]['length'] > 0
+#             and d + graph.edges[v, w, 0]['length'] < goal_dist)
+
+def good(gst, d, v, w, graph, goal_dist): # corrected code
+    return (w not in gst.adj[v] # EDITED: checking if edge(v,w) has already been covered in the path
+            and graph.edges[v, w, 0]['length'] > 0 # making sure v and w are not the same vertex
+            and d + graph.edges[v, w, 0]['length'] < goal_dist) # total distance + distance between v and w < target distance
 
 
 
 # Helper function that returns the absolute difference between any 2 given directions.
 # Note that the value should never be more than 180, since a left turn of x is
 # equivalent to a right turn of (360 - x).
-def get_bearing_diff(b1, b2):
-    bdiff = abs(b1-b2) % 360 # allows for neg and large bearings
-    return bdiff
+# absolute ANGULAR difference between two compass directions --> what direction do we need to turn at an intersection?
+# b1, b2 are in degrees
+# possible results are 0° for North, 90° for East, 180° for South, 270° for West (will return 90° in other direction through this func)
+
+# def get_bearing_diff(b1, b2): # faulty code
+#     bdiff = abs(b1-b2) % 360 # allows for neg and large bearings
+#     return bdiff
+
+def get_bearing_diff(b1, b2): # corrected code
+    bdiff = abs(b1-b2) % 360 # wraps the result around a full circle in case the absolute difference is more than 360
+    return bdiff if bdiff <= 180 else 360 - bdiff # EDITED: returns smaller of the x and (360-x) degrees
 
 
 
@@ -37,12 +56,51 @@ def get_bearing_diff(b1, b2):
 # Part 2: return a subgraph with the characteristics from Part 1, but change the definition
 # of "neighbors" so that at every node, the direction of the next edge is as close as possible
 # to the current direction. This feature changes the order in which the neighbors are considered.
-def find_route(start, goal_dist, graph):
+
+# def find_route(start, goal_dist, graph): # faulty code
+#     # distances and feasible edges will come from 'graph', solution built in 'gstate'
+#     gstate = nx.DiGraph()
+#     gstate.add_nodes_from(graph)
+
+#     # need stack of: (gstate, prev node, curr node, total len so far, number of edges in route so far)
+#     # init stack & push start vertex
+#     stack = deque()
+#     stack.append((gstate, start, start, 0, 0))
+#     # next two lines are necessary for part 2) so that every current bearing has a previous bearing to compare against
+#     graph.add_edge(start, start, 0)
+#     graph.edges[start, start, 0]['bearing'] = random.randint(0,360) # grab a random initial direction
+
+#     while stack: # while stack isn't empty
+#         gst, prev, curr, lensofar, clock = stack.pop()  # gst, previous node, curr node, dist so far, edges so far
+
+#         if curr not in list(gst.neighbors(prev)): # make sure curr hasn't been processed before
+#             gst.add_edge(prev, curr)
+#             gst.edges[prev, curr]['time'] = clock # need this for path drawing
+
+#             # stopping criteria: if we've gone far enough, return our solution graph and the number of edges
+#             if lensofar > goal_dist:
+#                 return gst, clock
+
+#             if STRAIGHTER_PATH:
+#                 # neighbors for part 2 - the "straightest" path
+#                 neighbors = sorted(graph.neighbors(curr),
+#                                     key=lambda x: get_bearing_diff(graph.edges[prev, curr, 0]['bearing'],
+#                                                                     graph.edges[curr, x, 0]['bearing']))
+#             else:
+#                 # neighbors for part 1 - just finding a path
+#                 neighbors = graph.neighbors(curr)
+
+#             for w in neighbors:
+#                 if good(gst, lensofar, curr, w, graph, goal_dist):
+#                     gstnew = gst.copy() # copy the path so we don't have to deal w backtracking. ok for small graphs.
+#                     stack.append((gstnew, curr, w, lensofar + graph.edges[curr, w, 0]['length'], clock + 1))
+
+def find_route(start, goal_dist, graph): # corrected code
     # distances and feasible edges will come from 'graph', solution built in 'gstate'
     gstate = nx.DiGraph()
     gstate.add_nodes_from(graph)
 
-    # need stack of: (gstate, prev node, curr node, totlen so far, number of edges in route so far)
+    # need stack of: (gstate, prev node, curr node, total len so far, number of edges in route so far)
     # init stack & push start vertex
     stack = deque()
     stack.append((gstate, start, start, 0, 0))
@@ -50,10 +108,10 @@ def find_route(start, goal_dist, graph):
     graph.add_edge(start, start, 0)
     graph.edges[start, start, 0]['bearing'] = random.randint(0,360) # grab a random initial direction
 
-    while stack:
+    while stack: # while stack isn't empty
         gst, prev, curr, lensofar, clock = stack.pop()  # gst, previous node, curr node, dist so far, edges so far
 
-        if curr not in list(gst.neighbors(prev)):
+        if (prev, curr) not in gst.edges: # EDITED: make sure the edge hasn't been processed before
             gst.add_edge(prev, curr)
             gst.edges[prev, curr]['time'] = clock # need this for path drawing
 
@@ -80,8 +138,14 @@ def find_route(start, goal_dist, graph):
 # you can refer to a node's elevation by: gr.nodes[rt[k]]['elevation'], where k is the kth element
 # of the rt list.
 def total_elevation_gain(gr, rt):
-    # TODO your code here
-    pass
+    # TODONE your code here
+    # pass
+    elevation_gain = 0
+    for k in range(1, len(rt)):
+        diff = gr.nodes[rt[k]]['elevation'] - gr.nodes[rt[k-1]]['elevation']
+        if diff > 0:
+            elevation_gain += diff
+    return elevation_gain
 
 
 # hsv color representation gives a rainbow from red and back to red over values 0 to 1.
