@@ -5,7 +5,7 @@ import random
 
 # At each intersection, should we try to go as straight as possible?
 # Set to False for task 1, then switch to True for task 2.
-STRAIGHTER_PATH = True
+STRAIGHTER_PATH = False
 
 # =================================
 # Workout planning with length, bearing, and elevation
@@ -122,8 +122,10 @@ def find_route(start, goal_dist, graph): # corrected code
             if STRAIGHTER_PATH:
                 # neighbors for part 2 - the "straightest" path
                 neighbors = sorted(graph.neighbors(curr),
-                                    key=lambda x: get_bearing_diff(graph.edges[prev, curr, 0]['bearing'],
-                                                                    graph.edges[curr, x, 0]['bearing']))
+                                    key=lambda x: get_bearing_diff(
+                                        graph.edges[prev, curr, 0]['bearing'],
+                                        graph.edges[curr, x, 0]['bearing'])
+                                    )[::1] # EDITED: reversing order so that the straightest path is explored first, is at the end of the stack
             else:
                 # neighbors for part 1 - just finding a path
                 neighbors = graph.neighbors(curr)
@@ -150,8 +152,22 @@ def total_elevation_gain(gr, rt):
 
 # hsv color representation gives a rainbow from red and back to red over values 0 to 1.
 # this function returns the color in rgb hex, given the current and total edge numbers
-def shade_given_time(k, n):
-    col = colorsys.hsv_to_rgb(k / n, 1.0, 1.0)
-    tup = tuple((int(x * 256) for x in col)) # why doesn't this work???
+# k/n normalizes the index of k to be within (0,1) to assign a hue based on the proportion of path covered
+# colorsys.hsv_to_rgb(k / n, 1.0, 1.0): here 1.0, 1.0 means full saturation and full brightness
+# it creates a tuple (hue, saturation, brightness) where hue is the proportion of path covered
+# and converts it into tuple with RGB intensities (r, g, b)
+# tup is converting RGB intensities into hex RGB color codes by scaling them by 255
+# {tup[0]:02x} converts color codes in the range (0,255), 255 inclusive, into "ff0000" hex codes
+# :02x means 0 --> pad with zeroes if needed, 2 --> two digits for each color, x --> convert to hex
+
+# def shade_given_time(k, n): # faulty code
+#     col = colorsys.hsv_to_rgb(k / n, 1.0, 1.0) 
+#     tup = tuple((int(x * 256) for x in col)) # why doesn't this work???
+#     st = f"#{tup[0]:02x}{tup[1]:02x}{tup[2]:02x}"
+#     return st
+
+def shade_given_time(k, n): # corrected code
+    col = colorsys.hsv_to_rgb(k / n, 1.0, 1.0) 
+    tup = tuple((int(x * 255) for x in col)) # EDITED: max value of RBG is 255
     st = f"#{tup[0]:02x}{tup[1]:02x}{tup[2]:02x}"
     return st

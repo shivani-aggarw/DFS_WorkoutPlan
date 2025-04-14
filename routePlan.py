@@ -13,17 +13,17 @@ SANITY_CHECK = True
 # your chosen destination in load_map.py
 graph = ox.io.load_graphml('graph_ubc.gml')
 
-if SANITY_CHECK:
-    # ...................................
-    # Visualize map for sanity check
-    fig, ax = ox.plot_graph(graph)
-    fig.savefig('ubc_map.png')
+# if SANITY_CHECK:
+#     # ...................................
+#     # Visualize map for sanity check
+#     fig, ax = ox.plot_graph(graph)
+#     fig.savefig('ubc_map.png')
 
-    # ...................................
-    # Visualize map with elevation for sanity check
-    nc = ox.plot.get_node_colors_by_attr(graph, 'elevation', cmap='plasma')
-    fig, ax = ox.plot_graph(graph, node_color=nc, node_size=5, edge_color='#333333', bgcolor='k')
-    fig.savefig('ubc_elevation.png')
+#     # ...................................
+#     # Visualize map with elevation for sanity check
+#     nc = ox.plot.get_node_colors_by_attr(graph, 'elevation', cmap='plasma')
+#     fig, ax = ox.plot_graph(graph, node_color=nc, node_size=5, edge_color='#333333', bgcolor='k')
+#     fig.savefig('ubc_elevation.png')
 
 
 # =======================================================
@@ -46,17 +46,24 @@ route, time = routeFinding.find_route(start, goal_dist, graph) # calls the main 
 
 # variable 'route' is a DiGraph, but we want a sequence of vertices along the solution path.
 # take a look at these variables to see what's going on.
-sorted_route = sorted(route.edges(), key=lambda x: route.edges[x[0], x[1]]['time'])
-# TODO: Use a list comprehension to assemble the list of vertices in order.
-route_vertices = []
+# route.edges() returns a tuple (from_node, to_node)
+# sorted_route sorts it based on time, reconstructs the chronological order of the path
+sorted_route = sorted(route.edges(), key=lambda x: route.edges[x[0], x[1]]['time']) # very slow code
+
+# TODONE: Use a list comprehension to assemble the list of vertices in order.
+route_vertices = [u if i == 0 else v for i, (u,v) in enumerate(sorted_route)]
+# print(route_vertices)
 
 # find coordinates of stopping point: last node on the route
-endlat, endlon = graph.nodes[route_vertices[-1]]['x'], graph.nodes[route_vertices[-1]]['y']
+# endlat, endlon = graph.nodes[route_vertices[-1]]['x'], graph.nodes[route_vertices[-1]]['y'] # faulty code
+# corrected code
+endlat, endlon = graph.nodes[route_vertices[-1]]['y'], graph.nodes[route_vertices[-1]]['x'] 
+# EDITED: x and y coordinates were reversed
 
 # add an accumulator that sums the total elevation gain over the course of the
 # workout. If an edge (u,v) in the graph corresponds to a downhill segment (difference
 # in elevations from u to v is negative), then it is ignored.
-eg = routeFinding.total_elevation_gain(graph,route_vertices) # sums the elevation gain over the route
+eg = routeFinding.total_elevation_gain(graph, route_vertices) # sums the elevation gain over the route
 
 
 # =================================
@@ -92,7 +99,9 @@ folium.map.Marker(
 folium.CircleMarker((startlat,startlon),
                     color='green',radius=10,fill=True).add_to(m)
 # Add blue end circle
-# TODO: Add your code here.
+# TODONE: Add your code here.
+folium.CircleMarker((endlat,endlon),
+                    color='blue',radius=10,fill=True).add_to(m) 
 
 filepath = "route_graph_workout.html"
 m.save(filepath)
