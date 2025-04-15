@@ -22,18 +22,14 @@ STRAIGHTER_PATH = True
 # goal_dist = target distance of the workout routine
 
 # def good(gst, d, v, w, graph, goal_dist): # faulty code 
-#     return (v not in gst.adj[w] # EDITED: checking if edge(v,w) has already been covered in the path
+#     return (v not in gst.adj[w] 
 #             and graph.edges[v, w, 0]['length'] > 0
 #             and d + graph.edges[v, w, 0]['length'] < goal_dist)
 
-def good(gst, d, v, w, graph, goal_dist): # corrected code
-    MARGIN = 1e-3 # EDITED: allowing flexibility
-    return ((v,w) not in gst.edges # EDITED: checking if edge(v,w) has already been covered in the path
-            and (v,w,0) in graph.edges # EDITED: checking the exact edge since it is a directed graph
-            and v != w # EDITED: checking if v and w are not the same node
-            and graph.edges[v, w, 0]['length'] > 0 # making sure v and w are not the same vertex
-            and d + graph.edges[v, w, 0]['length'] <= goal_dist + MARGIN) # total distance covered within range
-
+def good(gst, d, v, w, graph, goal_dist): # corrected code 
+    return (w not in gst.adj[v] # EDITED: checking if edge(v,w) has already been covered in the path
+            and v != w # EDITED: checking if v and w are not the same nodes
+            and d + graph.edges[v, w, 0]['length'] < goal_dist)
 
 
 # Helper function that returns the absolute difference between any 2 given directions.
