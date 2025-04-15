@@ -3,8 +3,8 @@ import networkx as nx
 import requests
 import pandas as pd
 
-# TODO: Change the address to a location of your choice!
-addr = "VPL Vancouver, BC, Canada"
+# TODONE: Change the address to a location of your choice!
+addr = "Winona Park, BC, Canada"
 
 graph = ox.graph_from_address(addr, dist=4000, dist_type="network", network_type='walk', simplify=True)
 ox.add_edge_bearings(graph)
