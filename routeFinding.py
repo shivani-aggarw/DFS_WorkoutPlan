@@ -26,10 +26,18 @@ STRAIGHTER_PATH = True
 #             and graph.edges[v, w, 0]['length'] > 0
 #             and d + graph.edges[v, w, 0]['length'] < goal_dist)
 
-def good(gst, d, v, w, graph, goal_dist): # corrected code 
-    return (w not in gst.adj[v] # EDITED: checking if edge(v,w) has already been covered in the path
-            and v != w # EDITED: checking if v and w are not the same nodes
-            and d + graph.edges[v, w, 0]['length'] < goal_dist)
+def good(gst, d, v, w, graph, goal_dist): # corrected code
+    if w in gst.adj[v]:  # EDITED: make sure we're checking the correct direction
+        return False
+    if v in gst.adj[w]: 
+        return False
+    if not graph.has_edge(v, w):
+        return False
+    edge_data = graph.get_edge_data(v, w)
+    first_key = list(edge_data.keys())[0]
+    edge_len = edge_data[first_key].get('length', 0)
+
+    return edge_len > 0 and d + edge_len < goal_dist*1.1 # EDITED: margin of error 
 
 
 # Helper function that returns the absolute difference between any 2 given directions.
@@ -45,7 +53,7 @@ def good(gst, d, v, w, graph, goal_dist): # corrected code
 
 def get_bearing_diff(b1, b2): # corrected code
     bdiff = abs(b1-b2) % 360 # wraps the result around a full circle in case the absolute difference is more than 360
-    return bdiff if bdiff <= 180 else 360 - bdiff # EDITED: returns smaller of the x and (360-x) degrees
+    return min(bdiff, 360 - bdiff) # EDITED: returns smaller of the x and (360-x) degrees
 
 
 
@@ -103,28 +111,32 @@ def find_route(start, goal_dist, graph): # corrected code
     # init stack & push start vertex
     stack = deque()
     stack.append((gstate, start, start, 0, 0))
+    
     # next two lines are necessary for part 2) so that every current bearing has a previous bearing to compare against
     graph.add_edge(start, start, 0)
     graph.edges[start, start, 0]['bearing'] = random.randint(0,360) # grab a random initial direction
+    
+    # define a fixed margin threshold (e.g., 100 meters)
+    margin = 100  # EDITED: allow a fixed 100m margin beyond goal distance
 
     while stack: # while stack isn't empty
         gst, prev, curr, lensofar, clock = stack.pop()  # gst, previous node, curr node, dist so far, edges so far
 
-        if (prev, curr) not in gst.edges: # EDITED: make sure the edge hasn't been processed before
+        if curr not in list(gst.neighbors(prev)): # make sure the curr hasn't been processed before
             gst.add_edge(prev, curr)
             gst.edges[prev, curr]['time'] = clock # need this for path drawing
 
             # stopping criteria: if we've gone far enough, return our solution graph and the number of edges
-            if lensofar > goal_dist:
+            if lensofar > goal_dist and lensofar <= goal_dist + margin: # EDITED: allowing margin
                 return gst, clock
 
             if STRAIGHTER_PATH:
                 # neighbors for part 2 - the "straightest" path
-                neighbors = sorted(graph.neighbors(curr),
+                neighbors = reversed(sorted(graph.neighbors(curr),
                                     key=lambda x: get_bearing_diff(
                                         graph.edges[prev, curr, 0]['bearing'],
                                         graph.edges[curr, x, 0]['bearing'])
-                                    )[::1] # EDITED: reversing order so that the straightest path is explored first, is at the end of the stack
+                                    )) # EDITED: reversing order so that the straightest path is explored first, is at the end of the stack
             else:
                 # neighbors for part 1 - just finding a path
                 neighbors = graph.neighbors(curr)
@@ -133,6 +145,10 @@ def find_route(start, goal_dist, graph): # corrected code
                 if good(gst, lensofar, curr, w, graph, goal_dist):
                     gstnew = gst.copy() # copy the path so we don't have to deal w backtracking. ok for small graphs.
                     stack.append((gstnew, curr, w, lensofar + graph.edges[curr, w, 0]['length'], clock + 1))
+
+# If no valid route is found after traversing the graph
+    print("No route found that meets the goal distance.")
+    return None, None  # Return None if no route is found
 
 # returns the total elevation gain in gr, over the route described by rt (list of vertices).
 # edges whose elevation gain is negative should be ignored.
@@ -146,7 +162,7 @@ def total_elevation_gain(gr, rt):
         diff = gr.nodes[rt[k]]['elevation'] - gr.nodes[rt[k-1]]['elevation']
         if diff > 0:
             elevation_gain += diff
-    return elevation_gain
+    return round(elevation_gain, 2)
 
 
 # hsv color representation gives a rainbow from red and back to red over values 0 to 1.
@@ -166,7 +182,10 @@ def total_elevation_gain(gr, rt):
 #     return st
 
 def shade_given_time(k, n): # corrected code
-    col = colorsys.hsv_to_rgb(k / n, 1.0, 1.0) 
+    if n == 0:
+        return '#ff0000'
+    hue = k / n
+    col = colorsys.hsv_to_rgb(hue, 1.0, 1.0)
     tup = tuple((int(x * 255) for x in col)) # EDITED: max value of RBG is 255
-    st = f"#{tup[0]:02x}{tup[1]:02x}{tup[2]:02x}"
-    return st
+    hex = f"#{tup[0]:02x}{tup[1]:02x}{tup[2]:02x}"
+    return hex

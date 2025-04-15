@@ -17,13 +17,13 @@ if SANITY_CHECK:
     # ...................................
     # Visualize map for sanity check
     fig, ax = ox.plot_graph(graph)
-    fig.savefig('winona_map.png')
+    fig.savefig('ubc_map.png')
 
     # ...................................
     # Visualize map with elevation for sanity check
     nc = ox.plot.get_node_colors_by_attr(graph, 'elevation', cmap='plasma')
     fig, ax = ox.plot_graph(graph, node_color=nc, node_size=5, edge_color='#333333', bgcolor='k')
-    fig.savefig('winona_elevation.png')
+    fig.savefig('ubc_elevation.png')
 
 
 # =======================================================
@@ -34,23 +34,34 @@ if SANITY_CHECK:
 #lat, lon = 49.2600154, -123.2510869
 # Example location: Wreck Beach.
 # lat, lon = 49.255, -123.255
-# location: Gurudwara near my house
-lat, lon = 49.21478024263063, -123.09805518228615
+# location: Prospect Point
+lat, lon = 49.31374355203662, -123.14232340428845
 
 # Graph algorithm requires that start location is a graph node
 # so find the one nearest our specified lat-long.
 start = ox.nearest_nodes(graph, lon, lat)
 startlat, startlon = graph.nodes[start]['y'], graph.nodes[start]['x']
 
-goal_dist = 5000  # meters, must go at least this far
+goal_dist = 2000  # meters, must go at least this far
+
+# Debug: Check the start node and goal distance
+print(f"Start node: {start}")
+print(f"Goal distance: {goal_dist} meters")
 
 route, time = routeFinding.find_route(start, goal_dist, graph) # calls the main DFS function
+
+# Debug: Check if route and time were returned properly
+if route is None or time is None:
+    print("Error: routeFinding returned None values.")
+    exit(1)  # Exit if there's an issue
+
+print(f"Route: {route}, Time: {time}")
 
 # variable 'route' is a DiGraph, but we want a sequence of vertices along the solution path.
 # take a look at these variables to see what's going on.
 # route.edges() returns a tuple (from_node, to_node)
 # sorted_route sorts it based on time, reconstructs the chronological order of the path
-sorted_route = sorted(route.edges(), key=lambda x: route.edges[x[0], x[1]]['time']) # very slow code
+sorted_route = sorted(route.edges(), key=lambda x: route.edges[x[0], x[1]]['time']) 
 
 # TODONE: Use a list comprehension to assemble the list of vertices in order.
 route_vertices = [u if i == 0 else v for i, (u,v) in enumerate(sorted_route)]
@@ -76,8 +87,9 @@ eg = routeFinding.total_elevation_gain(graph, route_vertices) # sums the elevati
 # route at a time, calculating the color of each edge.
 route_gdf = ox.routing.route_to_gdf(graph, route_vertices)
 
-kwargs = { 'style_kwds' : dict(weight=5) }
+kwargs = {'style_kwds': dict(weight=5) }
 # If we just use route_gdf.iterrows(), we get Pandas rows, not GeoDataFrame rows
+m = None # EDITED: accumulator for map, m
 for i, index in enumerate(route_gdf.index):
     row_gdf = route_gdf.loc[[index]]
     if i == 0:
@@ -107,3 +119,5 @@ folium.CircleMarker((endlat,endlon),
 
 filepath = "route_graph_workout.html"
 m.save(filepath)
+
+print(f"Workout route saved as {filepath}")
