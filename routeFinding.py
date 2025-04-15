@@ -27,9 +27,11 @@ STRAIGHTER_PATH = True
 #             and d + graph.edges[v, w, 0]['length'] < goal_dist)
 
 def good(gst, d, v, w, graph, goal_dist): # corrected code
-    return (w not in gst.adj[v] # EDITED: checking if edge(v,w) has already been covered in the path
+    MARGIN = 1e-3 # EDITED: allowing flexibility
+    return ((v,w) not in gst.edges # EDITED: checking if edge(v,w) has already been covered in the path
+            and v != w # EDITED: checking if v and w are not the same node
             and graph.edges[v, w, 0]['length'] > 0 # making sure v and w are not the same vertex
-            and d + graph.edges[v, w, 0]['length'] < goal_dist) # total distance + distance between v and w < target distance
+            and d + graph.edges[v, w, 0]['length'] <= goal_dist + MARGIN) # total distance covered within range
 
 
 
