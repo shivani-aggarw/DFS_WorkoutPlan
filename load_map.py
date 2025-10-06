@@ -2,9 +2,9 @@ import osmnx as ox
 import networkx as nx
 import requests
 import pandas as pd
+import matplotlib.pyplot as plt
 
-# TODO: Change the address to a location of your choice!
-addr = "VPL Vancouver, BC, Canada"
+addr = "Stanley Park, Vancouver BC, Canada"
 
 graph = ox.graph_from_address(addr, dist=4000, dist_type="network", network_type='walk', simplify=True)
 ox.add_edge_bearings(graph)
@@ -19,7 +19,6 @@ node_gdfs, edge_gdfs = gdfs
 # Attach elevation data to each node using open-elevation API
 # The API is quite slow and isn't very reliable 1000 records at a time. 
 # It might fail with 504 but eventually will work after a few tries :D 
-# (Please double check the code, maybe it's something that I've overlooked)
 # Chose this API because it doesn't limit the number of records with its post requests.
 
 
@@ -57,16 +56,18 @@ result = pd.DataFrame.from_records(altitude_records, index=node_gdfs.index)
 nx.set_node_attributes(graph, name="elevation", values=result["elevation"].to_dict())
 
 # save graph to GraphML on disk for later use
-ox.io.save_graphml(graph, filepath='graph_student.gml')
+ox.io.save_graphml(graph, filepath='graph.gml')
 
 # =================================
 # Visualize general map
-fig, ax = ox.plot_graph(graph)
+fig, ax = ox.plot_graph(graph, show = False, close = False)
 fig.savefig('student_map.png')
+plt.close(fig)
 
 # =================================
 # Visualize map with elevation
 
 nc = ox.plot.get_node_colors_by_attr(graph, 'elevation', cmap='plasma')
-fig, ax = ox.plot_graph(graph, node_color=nc, node_size=5, edge_color='#333333', bgcolor='k')
+fig, ax = ox.plot_graph(graph, node_color=nc, node_size=5, edge_color='#333333', bgcolor='k', show = False, close = False)
 fig.savefig('student_map_elevation.png')
+plt.close(fig)
