@@ -56,12 +56,12 @@ result = pd.DataFrame.from_records(altitude_records, index=node_gdfs.index)
 nx.set_node_attributes(graph, name="elevation", values=result["elevation"].to_dict())
 
 # save graph to GraphML on disk for later use
-ox.io.save_graphml(graph, filepath='graph.gml')
+ox.io.save_graphml(graph, filepath='../data/graph.gml')
 
 # =================================
 # Visualize general map
 fig, ax = ox.plot_graph(graph, show = False, close = False)
-fig.savefig('student_map.png')
+fig.savefig('../outputs/student_map.png')
 plt.close(fig)
 
 # =================================
@@ -69,5 +69,5 @@ plt.close(fig)
 
 nc = ox.plot.get_node_colors_by_attr(graph, 'elevation', cmap='plasma')
 fig, ax = ox.plot_graph(graph, node_color=nc, node_size=5, edge_color='#333333', bgcolor='k', show = False, close = False)
-fig.savefig('student_map_elevation.png')
+fig.savefig('../outputs/student_map_elevation.png')
 plt.close(fig)

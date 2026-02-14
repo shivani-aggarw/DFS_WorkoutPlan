@@ -9,19 +9,19 @@ import routeFinding
 SANITY_CHECK = False
 
 # load graph from GML
-graph = ox.io.load_graphml('graph.gml')
+graph = ox.io.load_graphml('../data/graph.gml')
 
 if SANITY_CHECK:
     # ...................................
     # Visualize map for sanity check
     fig, ax = ox.plot_graph(graph)
-    fig.savefig('ubc_map.png')
+    fig.savefig('../outputs/ubc_map.png')
 
     # ...................................
     # Visualize map with elevation for sanity check
     nc = ox.plot.get_node_colors_by_attr(graph, 'elevation', cmap='plasma')
     fig, ax = ox.plot_graph(graph, node_color=nc, node_size=5, edge_color='#333333', bgcolor='k')
-    fig.savefig('ubc_elevation.png')
+    fig.savefig('../outputs/ubc_elevation.png')
 
 
 # =======================================================
@@ -107,7 +107,7 @@ folium.CircleMarker((startlat,startlon),
 folium.CircleMarker((endlat,endlon),
                     color='blue',radius=10,fill=True).add_to(m) 
 
-filepath = "route_graph_workout.html"
+filepath = "../outputs/route_graph_workout.html"
 m.save(filepath)
 
 print(f"Workout route saved as {filepath}")
