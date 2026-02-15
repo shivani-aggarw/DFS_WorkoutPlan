@@ -1,0 +1,11 @@
+name: workout-plan
+channels:
+  - conda-forge
+dependencies:
+  - folium
+  - networkx
+  - matplotlib
+  - python=3.11
+  - pandas>=2.2
+  - requests
+  - osmnx
