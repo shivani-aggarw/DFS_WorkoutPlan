@@ -15,12 +15,12 @@ The project includes the following features:
 
 In the first task in the list above, the algorithm arbitrarily determines which direction it should go at every vertex. An example is in the image below where the route starts near Wreck beach and proceeds for at least 5000m but has a lot of turns.
 
-<img src='./!archive/route_graph_workout_curvy_example.jpg' width='600'/> \
+<img src='./images/route_graph_workout_curvy_example.jpg' width='600'/> \
 *A workout route through UBC that makes a lot of turns*
 
 In the second task, the algorithm is constrained to choose the outgoing direction at a vertex which is closest to the incoming direction. The image below shows the straight path it chose with the same inputs. 
 
-<img src='./!archive/route_graph_workout_straight_example.jpg' alt='A workout route through UBC that avoids turns' width='600'/> \
+<img src='./images/route_graph_workout_straight_example.jpg' alt='A workout route through UBC that avoids turns' width='600'/> \
 *A workout route through UBC that avoids turns*
 
 ### Schema
