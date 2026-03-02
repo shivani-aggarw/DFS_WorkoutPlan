@@ -32,13 +32,13 @@ The script `routePlan.py` generates an interactive route visualization as the fi
 - `load_map.py` that generates a graphable map of the preferred location and saves it as `graph.gml`
 - `routePlan.py` generates an interactive route visualization as the file `route_graph_workout.html`
 
-*Note: routeFinding.py contains the core logic and must remain in the same directory as the other scripts so they can import its functions.*
+*Note: `routeFinding.py` contains the core logic and must remain in the same directory as the other scripts so they can import its functions.*
 
 ### Usage
 
 1. **Environment setup**
 
-This project uses conda-lock to ensure dependency stability across Windows, macOS, and Linux. To create the environment, run the following from the project root:
+This project uses conda-lock to ensure dependency stability across Windows, macOS, and Linux. To create the environment, run the following in your bash terminal from the project root:
 
 ```bash
 # install conda-lock
@@ -51,18 +51,24 @@ conda activate workout-env
 
 2. **Running scripts**
 
-You can execute the scripts (in order) through the following commands in your terminal from the project root:
+You can execute the scripts (in order) through the following commands in your bash terminal from the project root:
 
 ```bash
-python scripts/load_map.py
-python scripts/routePlan.py
+# navigate to scripts directory
+cd scripts
+
+# execute the scripts
+python load_map.py
+python routePlan.py
 ```
 
 3. **Viewing results**
 
 After running the scripts, navigate to the `outputs/` folder and open `route_graph_workout.html` in any web browser to see the interactive map.
 
-Note: A `cache/` folder will be created automatically by OSMnx to speed up map loading. This folder is ignored by Git and can be deleted safely.
+*Note: A `cache/` folder will be created automatically by OSMnx to speed up map loading. This folder is ignored by Git and can be deleted safely.*
+
+*Note: Once you have viewed the project, you can return to your base environment by running `conda deactivate` in your bash terminal.*
 
 ### Resources
 
